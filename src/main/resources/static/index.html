@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>GPT 소비 코치</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #chatBox { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; margin-bottom: 10px; background: #f8f8f8; }
+        .user { color: #222; margin: 5px 0; }
+        .gpt { color: #444; background: #fff; border-radius: 6px; padding: 8px; margin: 5px 0; }
+        #userInput { width: 80%; padding: 10px; }
+        #sendBtn { padding: 10px 15px; }
+    </style>
+</head>
+<body>
+<h1>GPT 소비 코치</h1>
+
+<div id="chatBox"></div>
+
+<input type="text" id="userInput" placeholder="질문을 입력하세요..." />
+<button id="sendBtn">보내기</button>
+
+<script>
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    sendBtn.addEventListener('click', async () => {
+        const input = userInput.value.trim();
+        if (!input) return;
+
+        // 사용자 메시지 표시
+        const userMessage = `<div class="user"><strong>👤 나:</strong> ${input}</div>`;
+        chatBox.innerHTML += userMessage;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // GPT API 호출
+        const res = await fetch('/api/v1/chatGpt/prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'gpt-4o',
+                temperature: 0.7,
+                messages: [{ role: 'user', content: input }]
+            })
+        });
+
+        const data = await res.json();
+        const markdown = data.choices?.[0]?.message?.content || '⚠️ 응답 파싱 실패';
+        const html = marked.parse(markdown); // 마크다운을 HTML로 변환
+
+        // GPT 응답 출력
+        const gptMessage = `<div class="gpt"><strong>🤖 GPT:</strong><div>${html}</div></div>`;
+        chatBox.innerHTML += gptMessage;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        userInput.value = '';
+    });
+</script>
+</body>
+</html>
