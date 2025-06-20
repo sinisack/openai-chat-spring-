@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -78,11 +79,23 @@ public class ChatGPTServiceImpl implements ChatGPTService {
 
         HttpHeaders headers = chatGPTConfig.httpHeaders();
 
+        //
+        List<Map<String, String>> updatedMessages = new ArrayList<>();
+        updatedMessages.add(Map.of(
+                "role", "system",
+                "content", "모든 응답은 반드시 한국어로 작성해주세요." +
+                        "코드와 관련 된 질문만 받고 설명해주세요." +
+                        "코드와 관련 되지 않는 질문을 하면 '코드와 관련되지 않는 질문은 받지 않고 있습니다.'라는 문구를 출력해 주세요" +
+                        "사용자를 위해 가독성 있게 작성해 주세요."
+        ));
+        updatedMessages.addAll(chatRequestDto.getMessages());
+
+
         ChatRequestDto requestDto = ChatRequestDto.builder()
                 .model(model)
-                .messages(chatRequestDto.getMessages())
+                .messages(updatedMessages)
                 .temperature(
-                        chatRequestDto.getTemperature() > 0 ? chatRequestDto.getTemperature() : 0.3f
+                        chatRequestDto.getTemperature() > 0 ? chatRequestDto.getTemperature() : 0.1f
                 )
                 .build();
 
